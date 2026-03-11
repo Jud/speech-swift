@@ -1219,19 +1219,23 @@ public class Qwen3TTSModel {
     // MARK: - Codec Prefix
 
     /// Build codec prefix: [think, think_bos, lang_id, think_eos, pad, bos] (6 tokens)
-    /// With speaker: [think, think_bos, lang_id, think_eos, pad, bos, spk_token] (7 tokens)
+    /// With speaker: [think, think_bos, lang_id, think_eos, spk_token, pad, bos] (7 tokens)
+    ///
+    /// Speaker token goes BEFORE pad+bos to match official Qwen3-TTS Python:
+    /// `cat([codec_embed_0, speaker_embed, codec_embed_1])` where
+    /// embed_0=[think,think_bos,lang,think_eos] and embed_1=[pad,bos].
     func buildCodecPrefix(languageId: Int, speakerTokenId: Int? = nil) -> [Int32] {
         var prefix: [Int32] = [
             Int32(CodecTokens.codecThink),
             Int32(CodecTokens.codecThinkBos),
             Int32(languageId),
             Int32(CodecTokens.codecThinkEos),
-            Int32(CodecTokens.codecPad),
-            Int32(CodecTokens.codecBos),
         ]
         if let spkId = speakerTokenId {
             prefix.append(Int32(spkId))
         }
+        prefix.append(Int32(CodecTokens.codecPad))
+        prefix.append(Int32(CodecTokens.codecBos))
         return prefix
     }
 
